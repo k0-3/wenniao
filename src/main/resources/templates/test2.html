@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Title</title>
+</head>
+<body>
+    <form th:action="@{/t2}" method="post">
+        <textarea id="t"></textarea>
+        <a th:href="@{/t1}">骰子</a>
+        <a th:href="@{/t3}">测试</a>
+        <i class="layui-icon layui-icon-align-left" style="font-size: 30px; color: #1E9FFF;"
+        th:if="${vote!=null}" name="voteid" th:value="${vote}"><a th:href="@{/delvote/{vote}}">删除</a></i>
+        <i class="layui-icon layui-icon-align-left" style="font-size: 30px; color: #1E9FFF;"
+           th:if="${dice!=null}" name="diceid" th:value="${dice}"><a th:href="@{/delvote/{dice}}">删除</a></i>
+        <button type="submit" id="btn">提交</button>
+    </form>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/js/jquery-3.1.0.min.js}"></script>
+<script th:src="@{/layui/layui.js}"></script>
+<script>
+    //通过blur事件触发sessionStorage
+    $('#t').blur(function(){
+        var val=$('#t').val();
+        sessionStorage.setItem('msg',val);
+        console.log(val);
+    });
+    //测试sessionStorage存储是否成功
+    var test = sessionStorage.getItem('msg');
+    console.log(test);
+
+    //当点击提交按钮时，将sessionStorage中的信息移除
+    $("#btn").click(function(){
+        sessionStorage.removeItem('msg');
+    });
+
+    //当网页加载时，将sessionStorage中的内容加载到对应的输入框中
+    $(document).ready(function(){
+        var val1=sessionStorage.getItem('msg');
+        $("#t").val(val1);
+    });
+</script>
+</body>
+</html>

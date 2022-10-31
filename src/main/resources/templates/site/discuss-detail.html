@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extra/spring-security">
+<head>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" th:href="@{/editor-md/css/editormd.css}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>帖子详情</title>
+</head>
+<body>
+<header>
+    <div class="layui-header"></div>
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+    <ul class="layui-nav layui-bg-orange">
+<!--        返回-->
+        <li class="layui-nav-item">
+            <a onclick="ret()"> <i class="layui-icon layui-icon-left" style="font-size: 20px;"></i></a>
+        </li>
+    </ul>
+    <ul class="layui-nav layui-bg-orange layui-layout-right">
+<!--        收藏-->
+        <li class="layui-nav-item">
+            <a onclick="collect()"> <i class="layui-icon layui-icon-star" style="font-size: 20px;"></i></a>
+        </li>
+<!--        只看楼主-->
+        <li class="layui-nav-item">
+            <a th:href="@{|/discuss/detail/${post.id}?author=1|}"> <i class="layui-icon layui-icon-diamond" style="font-size: 20px;"></i></a>
+        </li>
+<!--        回复-->
+        <li class="layui-nav-item">
+            <a th:href="@{|/comment/publish/${post.id}|}" onclick="savepos()"> <i class="layui-icon layui-icon-release" style="font-size: 20px;"></i></a>
+        </li>
+    </ul>
+    </div>
+    </div>
+</header>
+
+<!--主楼-->
+<div class="layui-col-xs12" id="main">
+<div class="layui-card">
+    <div class="layui-card-body" >
+<!--        作者-->
+        <div class="layui-col-xs6 layui-font-12">
+            <i class="layui-icon layui-icon-diamond" style="font-size: 10px; color: #1E9FFF;"></i>
+            <a th:text="${user.nickname}" ></a>
+        </div>
+        <div class="layui-col-xs6 layui-font-12" style="text-align: right;color:#C2C2C2">
+            <span th:text="${#dates.format(post.createTime,'MM-dd HH:mm:ss')}"></span>
+<!--            标为完结状态-->
+            <a th:if="${loginUser!=null && user.id==loginUser.id}" onclick="over()"><i class="layui-icon layui-icon-ok" style="font-size: 15px; color: #1E9FFF;"></i></a>
+            <a th:if="${loginUser!=null && user.id==loginUser.id}"><i class="layui-icon layui-icon-export" style="font-size: 15px; color: #1E9FFF;"></i></a>
+        </div>
+<!--        主楼-->
+        <br>
+        <div class="layui-col-xs12" style="font-size: 25px;font-family: Sim;margin-top:10px;">
+            <span th:utext="${post.title}"></span>
+        </div>
+        <br>
+        <div class="layui-col-xs12 layui-font-16" style="margin-top:15px;" id="md-content">
+            <textarea th:utext="${post.content}"></textarea>
+        </div>
+         <hr>
+
+<!--        投票-->
+        <div th:fragment="m_vote" th:id="m_vote">
+        <div class="layui-bg-gray" style="margin: 10px;border-radius: 5%;padding: 10px;" th:if="${isvote && isvoted==false}">
+            <span class="layui-font-20" th:text="${vote.voteTitle}"></span>
+            <br>
+            <div class="layui-col-xs5">
+                <span class="layui-font-14" th:text="${vote.userCount}"></span> 参与
+            </div>
+            <div class="layui-col-xs7">
+                <span class="layui-font-14" th:text="${#dates.format(vote.expire,'MM.dd HH:mm:ss')}"></span> 结束
+            </div>
+            <form class="layui-form">
+                <div th:each="op:${vote.op}">
+                <input type="radio" name="vote" th:value="${op.key}" th:title="${op.key}"></span>
+<!--                <br>-->
+                </div>
+                <button type="submit" onclick="voting()" class="layui-btn layui-btn-fluid layui-btn-warm" style="margin-top: 10px;">提交</button>
+            </form>
+        </div>
+<!--        投票和过期后-->
+        <div class="layui-bg-gray" style="margin: 10px;border-radius: 5%;padding: 10px;" th:if="${isvote && isvoted==true}">
+            <span class="layui-font-20" th:text="${vote.voteTitle}"></span>
+            <br>
+            <div class="layui-col-xs5">
+                <span class="layui-font-14" th:text="${vote.userCount}"></span>参与
+            </div>
+            <div class="layui-col-xs7">
+                <span class="layui-font-14" th:text="${#dates.format(vote.expire,'MM.dd HH:mm:ss')}"></span>结束
+            </div>
+            <form style="margin-top: 5px;">
+                <div style="margin-top: 10px;" th:each="op:${vote.op}">
+                    <div class="layui-col-xs6" th:text="${op.key}"></div>
+                    <div class="layui-col-xs6 layui-font-12" style="text-align: right;" th:text="${op.value}"></div>
+                    <div class="layui-col-xs12">
+                        <div class="layui-progress" lay-showpercent="true" style="margin-top: 10px;">
+                            <div class="layui-progress-bar layui-bg-orange" th:lay-percent="${op.value*100/vote.userCount+'%'}"></div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button type="button" class="layui-btn layui-btn-fluid layui-btn-disabled" style="margin-top: 10px;">————</button>
+            </form>
+        </div>
+        </div>
+        <!--        骰子-->
+        <div th:if="${post.diceId!=null}">
+            <i class="bi bi-x-diamond">8+6+1=15</i>
+        </div>
+    </div>
+
+</div>
+
+<!--    评论区-->
+    <div th:each="c:${comments}">
+    <div class="layui-card">
+        <div class="layui-card-body" >
+            <!--        作者-->
+            <div class="layui-col-xs6 layui-font-12">
+                <i class="layui-icon layui-icon-diamond" style="font-size: 10px; color: #1E9FFF;"></i>
+                <a th:text="${c.comment.nickname}" ></a>
+            </div>
+            <div class="layui-col-xs6 layui-font-12" style="text-align: right;color:#C2C2C2">
+                <span th:text="${#dates.format(c.comment.createTime,'MM-dd HH:mm:ss')}"></span>
+                <span th:text="${page.offset + cStat.count}"></span>楼
+            </div>
+            <!--        正文-->
+
+            <br>
+            <div class="layui-col-xs12 layui-font-16" style="margin-top:15px;" th:id="'md-comment'+${cStat.count}">
+                <textarea th:utext="${c.comment.content}"></textarea>
+            </div>
+            <hr>
+
+            <!--        投票-->
+            <div th:fragment="c_vote" th:id="c_vote">
+                <div class="layui-bg-gray" style="margin: 10px;border-radius: 5%;padding: 10px;" th:if="${c.isvote && c.isvoted==false}">
+                    <span class="layui-font-20" th:text="${c.vote.voteTitle}"></span>
+                    <br>
+                    <div class="layui-col-xs5">
+                        <span class="layui-font-14" th:text="${c.vote.userCount}"></span> 参与
+                    </div>
+                    <div class="layui-col-xs7">
+                        <span class="layui-font-14" th:text="${#dates.format(c.vote.expire,'MM.dd HH:mm:ss')}"></span> 结束
+                    </div>
+                    <form class="layui-form">
+                        <div th:each="op:${c.vote.op}">
+                            <input type="radio" name="vote" th:value="${op.key}" th:title="${op.key}"></span>
+                            <!--                <br>-->
+                        </div>
+                        <button type="submit" th:onclick="c_voting([[${c.comment.voteId}]])" class="layui-btn layui-btn-fluid layui-btn-warm" style="margin-top: 10px;">提交</button>
+                    </form>
+                </div>
+                <!--        投票和过期后-->
+                <div class="layui-bg-gray" style="margin: 10px;border-radius: 5%;padding: 10px;" th:if="${c.isvote && c.isvoted==true}">
+                    <span class="layui-font-20" th:text="${c.vote.voteTitle}"></span>
+                    <br>
+                    <div class="layui-col-xs5">
+                        <span class="layui-font-14" th:text="${c.vote.userCount}"></span>参与
+                    </div>
+                    <div class="layui-col-xs7">
+                        <span class="layui-font-14" th:text="${#dates.format(c.vote.expire,'MM.dd HH:mm:ss')}"></span>结束
+                    </div>
+                    <form style="margin-top: 5px;">
+                        <div style="margin-top: 10px;" th:each="op:${c.vote.op}">
+                            <div class="layui-col-xs6" th:text="${op.key}"></div>
+                            <div class="layui-col-xs6 layui-font-12" style="text-align: right;" th:text="${op.value}"></div>
+                            <div class="layui-col-xs12">
+                                <div class="layui-progress" lay-showpercent="true" style="margin-top: 10px;">
+                                    <div class="layui-progress-bar layui-bg-orange" th:lay-percent="${op.value*100/c.vote.userCount+'%'}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <button type="button" class="layui-btn layui-btn-fluid layui-btn-disabled" style="margin-top: 10px;">————</button>
+                    </form>
+                </div>
+            </div>
+            <!--        骰子-->
+            <div th:if="${c.comment.diceId!=null}">
+                <i class="bi bi-x-diamond">8+6+1=15</i>
+            </div>
+        </div>
+    </div>
+    </div>
+    <!-- 分页 -->
+    <nav class="mt-5" th:replace="index::pagination"></nav>
+</div>
+
+
+<!-- 提示框 -->
+<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hintModalLabel">提示</h5>
+            </div>
+            <div class="modal-body" id="hintBody"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script th:src="@{/js/jquery-3.1.0.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/layui/layui.js}"></script>
+<script th:src="@{/js/global.js}"></script>
+
+<script th:src="@{/editor-md/lib/marked.min.js}"></script>
+<script th:src="@{/editor-md/lib/prettify.min.js}"></script>
+<script th:src="@{/editor-md/lib/raphael.min.js}"></script>
+<script th:src="@{/editor-md/lib/underscore.min.js}"></script>
+<script th:src="@{/editor-md/lib/sequence-diagram.min.js}"></script>
+<script th:src="@{/editor-md/lib/flowchart.min.js}"></script>
+<script th:src="@{/editor-md/lib/jquery.flowchart.min.js}"></script>
+<script th:src="@{/editor-md/editormd.min.js}"></script>
+<script>
+    layui.use(function() {
+        var element = layui.element;
+        var form = layui.form;
+    });
+</script>
+<script type="text/javascript" th:inline="javascript">
+    var testEditor;
+    $(function () {
+        testEditor = editormd.markdownToHTML("md-content", {
+            htmlDecode: "style,script,iframe",
+            emoji: true,
+            taskList: true,
+            tex: true, // 默认不解析
+            flowChart: true, // 默认不解析
+            sequenceDiagram: true, // 默认不解析
+            codeFold: true
+        })
+    })
+    $(function () {
+        for(var i=1;i<=100;i++) {
+            testEditor = editormd.markdownToHTML("md-comment"+i, {
+                htmlDecode: "style,script,iframe",
+                emoji: true,
+                taskList: true,
+                tex: true, // 默认不解析
+                flowChart: true, // 默认不解析
+                sequenceDiagram: true, // 默认不解析
+                codeFold: true
+            })
+        }
+    })
+    function voting(){
+        var voteId = [[${post.voteId}]];
+        var userId = [[${loginUser.id}]];
+        var op = $("input[name='vote']:checked").val();
+        var isvote = [[${isvote}]];
+        sessionStorage.setItem("pos",document.documentElement.scrollTop);
+        $.post(
+            CONTEXT_PATH+"/discuss/voting",
+            {"voteId":voteId,"userId":userId,"op":op,"isvote":isvote},
+            function (data){
+
+            }
+        )
+    }
+    function c_voting(voteId){
+        var userId = [[${loginUser.id}]];
+        var op = $("input[name='vote']:checked").val();
+        var isvote = [[${isvote}]];
+        sessionStorage.setItem("pos",document.documentElement.scrollTop);
+        $.post(
+            CONTEXT_PATH+"/discuss/voting",
+            {"voteId":voteId,"userId":userId,"op":op,"isvote":isvote},
+            function (data){
+
+            }
+        )
+    }
+    window.onload=function (){
+        var pos = sessionStorage.getItem("pos");
+        if(pos !=null){
+            window.scrollTo(0,pos);
+        }
+    }
+    function over(){ // 标为完结
+        var postId = [[${post.id}]];
+        $.post(
+            CONTEXT_PATH+"/discuss/over",
+            {"postId":postId},
+            function (data){
+                data = $.parseJSON(data);
+                $("#hintBody").text(data.msg);
+                $("#hintModal").modal("show");
+                setTimeout(function () {
+                    $("hintModal").modal("hide");
+                },1000);
+            }
+        )
+    }
+    function savepos(){
+        sessionStorage.setItem("pos",document.documentElement.scrollTop);
+    }
+    function collect(){
+        var postId = [[${post.id}]];
+        $.post(
+            CONTEXT_PATH+"/collect",
+            {"postId":postId},
+            function (data){
+                data = $.parseJSON(data);
+                $("#hintBody").text(data.msg);
+                $("#hintModal").modal("show");
+                setTimeout(function () {
+                    $("hintModal").modal("hide");
+                },1000);
+            }
+        )
+    }
+</script>
+</body>
+</html>

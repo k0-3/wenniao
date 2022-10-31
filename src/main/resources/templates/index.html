@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extra/spring-security">
+<head>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>首页</title>
+    <style>
+        .layui-btn-container{font-size:inherit}
+    </style>
+</head>
+<body>
+<header th:fragment="header">
+    <div class="layui-header"></div>
+    <div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+            <ul class="layui-nav layui-bg-orange">
+                <li class="layui-nav-item" >
+                    <a href="javascript:;"> <i class="layui-icon layui-icon-spread-left" style="font-size: 20px;"></i></a>
+                    <dl class="layui-nav-child">
+                        <dd><a th:href="@{/index(tag=0)}">全部</a></dd>
+                        <dd><a th:href="@{/index(tag=1)}">安科</a></dd>
+                        <dd><a th:href="@{/index(tag=2)}">大纲</a></dd>
+                        <dd><a th:href="@{/index(tag=3)}">rpg</a></dd>
+                        <dd><a th:href="@{/index(tag=4)}">海龟汤</a></dd>
+                        <dd><a th:href="@{/index(tag=5)}">沉浸式</a></dd>
+                        <dd><a th:href="@{/index(tag=6)}">水区</a></dd>
+                    </dl>
+                </li>
+            </ul>
+            <ul class="layui-nav layui-bg-orange layui-layout-right">
+                <li class="layui-nav-item">
+                    <form method="post" th:action="@{/search}">
+                        <input name="keyword" style="width:120px;height: 20px;color:#393D49;background-color: #faebcc;border:0px solid red;border-radius: 15px;">
+                        <i class="layui-icon layui-icon-search" style="font-size: 10px;"></i>
+                    </form>
+                </li>
+                <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser == null}" style="color: #0c0c0c">
+                    <a class="nav-link" th:href="@{/register}">注册</a>
+                </li>
+                <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser == null}" style="color: #0c0c0c">
+                    <a class="nav-link" th:href="@{/login}">登录</a>
+                </li>
+                <li class="layui-nav-item" th:if="${loginUser != null}" style="color: #0c0c0c">
+                    <a href="javascript:"><i class="layui-icon layui-icon-username" style="font-size: 20px;"></i></a>
+                    <dl class="layui-nav-child">
+                        <dd><a th:href="@{/mycollection}">我的收藏</a></dd>
+                        <dd><a th:href="@{/mypost}">我的发帖</a></dd>
+                        <dd><a onclick="t()" href="">通知</a></dd>
+                        <dd><a onclick="t()" href="">私信</a></dd>
+                    </dl>
+                </li>
+            </ul>
+    </div>
+    </div>
+</header>
+
+<div>
+    <div class="layui-row">
+        <div class="layui-col-xs4" >
+            <a th:href="@{/discuss/publish}" >
+                <button type="button" class="layui-btn layui-btn-primary layui-btn-sm">发表新帖</button>
+            </a>
+        </div>
+        <div class="layui-col-xs8" style="text-align: right">
+            <div class="layui-btn-group" >
+                <a th:href="@{/index(orderMode=0,tag=${tag})}"><button type="button" class="layui-btn layui-btn-primary layui-btn-sm" >最新</button></a>
+                <a th:href="@{/index(orderMode=1,tag=${tag})}"><button type="button" class="layui-btn layui-btn-primary layui-btn-sm">最热</button></a>
+                <a th:href="@{/index(orderMode=2,tag=${tag})}"><button type="button" class="layui-btn layui-btn-primary layui-btn-sm">完结</button></a>
+            </div>
+        </div>
+    </div>
+
+    <div th:each="map:${discussPosts}">
+        <div class="layui-col-xs12">
+            <div class="layui-card" style="border-bottom: none">
+                <a th:href="@{|/discuss/detail/${map.post.id}|}" target="_blank">
+                <div class="layui-card-body" >
+                    <div class="layui-col-xs12 layui-font-16">
+                        <span th:utext="${map.post.title}" th:style="|color:${map.post.status==1?'red':'black'}|"></span>
+                    </div>
+                    <div class="layui-col-xs5 layui-font-12" style="text-align: left;color:#C2C2C2">
+                        <span th:if="${map.post.tag==1}">安科</span>
+                        <span th:if="${map.post.tag==2}">大纲</span>
+                        <span th:if="${map.post.tag==3}">rpg</span>
+                        <span th:if="${map.post.tag==4}">海龟汤</span>
+                        <span th:if="${map.post.tag==5}">沉浸式</span>
+                        <span th:if="${map.post.tag==6}">水区</span>
+                        <span th:utext="${map.user.nickname}"></span>
+                    <!-- 类型 作者名-->
+                    </div>
+                    <div class="layui-col-xs7 layui-font-12" style="text-align: right;color:#C2C2C2">
+                        更新于<span th:utext="${#dates.format(map.post.latestComment,'MM-dd HH:mm:ss')}"></span>
+                        <i class="layui-icon layui-icon-reply-fill" style="font-size: 10px;"><span th:text="${map.post.commentCount}"></span></i>
+                    </div>
+                </div>
+                </a>
+                <hr>
+            </div>
+        </div>
+    </div>
+
+    <!--分页 -->
+    <nav class="mt-5" th:if = "${page.rows>0}" th:fragment="pagination">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" th:href="@{${page.path}(current=1)}">首页</a>
+            </li>
+            <li th:class="|page-item ${page.current==1?'disabled':''}|">
+                <a class="page-link" th:href="@{${page.path}(current=${page.current-1})}">上一页</a>
+            </li>
+            <!--numbers.sequence 生成一个 page.from 到 page.to 的连续整数数组-->
+            <li th:each="i:${#numbers.sequence(page.from,page.to)}" th:class="|page-item ${i==page.current? 'active' : ''}|" >
+                <a class="page-link" th:href="@{${page.path}(current=${i})}" th:text="${i}"></a>
+            </li>
+            <li th:class="|page-item ${page.current==page.total ? 'disabled':''}|">
+                <a class="page-link" th:href="@{${page.path}(current=${page.current+1})}">下一页</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" th:href="@{${page.path}(current=${page.total})}">末页</a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+<!--提示框-->
+<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hintModalLabel">提示</h5>
+            </div>
+            <div class="modal-body" id="hintBody"></div>
+        </div>
+    </div>
+</div>
+
+
+<script th:src="@{/js/jquery-3.1.0.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/layui/layui.js}"></script>
+<script>
+    layui.use(function() {
+        var element = layui.element;
+
+    });
+    function t(){
+        alert("还没写");
+    }
+</script>
+</body>
+</html>

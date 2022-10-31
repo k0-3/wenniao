@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "community.path.doamin",
+      "type": "java.lang.String",
+      "description": "Description for community.path.doamin."
+    }
+  ] }

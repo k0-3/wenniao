@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extra/spring-security">
+<head>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/global.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/editor-md/css/editormd.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>发帖</title>
+</head>
+<body>
+<header th:fragment="header">
+    <div class="layui-header"></div>
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+            <ul class="layui-nav layui-bg-orange">
+                <li class="layui-nav-item">
+                    <a onclick="ret1()"> <i class="layui-icon layui-icon-left" style="font-size: 20px;"></i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<!--选择版面-->
+<div class="layui-form layui-form-pane">
+    <div class="layui-form-item">
+        <label class="layui-form-label">版面</label>
+        <div class="layui-input-block">
+            <select name="tag" id="tag">
+                <option value="1">安科</option>
+                <option value="2">大纲</option>
+                <option value="3">rpg</option>
+                <option value="4">海龟汤</option>
+                <option value="5">沉浸式</option>
+                <option value="6">水区</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!--标题-->
+<div style="margin: 10px">
+    <div class="layui-font-20">
+        <input type="text" placeholder="请输入标题" required style="border:0px solid red;" id="title">
+        <hr>
+    </div>
+</div>
+<!--    正文-->
+<div id="test-editor">
+    <textarea style="display:none;" id="content"></textarea>
+</div>
+<!--投票和骰子-->
+<div style="margin: 15px;">
+    <a th:href="@{/discuss/vote}" onclick="return save1()"><button class="layui-btn layui-btn-primary layui-border-orange">投票</button></a>
+    <a th:href="@{/discuss/dice}" onclick="return save2()"><button class="layui-btn layui-btn-primary layui-border-orange">骰子</button></a>
+</div>
+<div style="margin: 15px;" >
+    <div th:fragment="v_refresh">
+    <i th:if="${voteId!='-1'}" class="bi bi-bar-chart-line" style="font-size: 20px; color: #faebcc; "
+        id="voteId" ><a onclick="delvote()">删除</a></i>
+    </div>
+    <div th:fragment="d_refresh">
+    <i th:if="${diceId!=-1}" class="bi bi-x-diamond" style="font-size: 20px; color: #faebcc; "
+        id="diceId" ><a onclick="deldice()">删除</a></i>
+    </div>
+</div>
+<button type="submit" class="layui-btn layui-btn-fluid layui-bg-orange" style="margin-top: 10px;" id="publishBtn">发表</button>
+
+<!-- 提示框 -->
+<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hintModalLabel">提示</h5>
+            </div>
+            <div class="modal-body" id="hintBody"></div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/jquery-3.1.0.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/layui/layui.js}"></script>
+<script th:src="@{/editor-md/editormd.min.js}"></script>
+
+<script th:src="@{/js/global.js}"></script>
+<!--editormd-->
+<script type="text/javascript">
+    var editor;
+    $(function() {
+        editor = editormd("test-editor", {
+            width   : "90%",
+            height  : 400,
+            syncScrolling : "single",
+            path    : "../editor-md/lib/",
+            saveHTMLToTextarea : true, // 这个配置，方便 post 提交表单
+            watch:false, //开启时不开预览
+            lineNumbers:false, //关闭行号
+
+            //上传图片
+            imageUpload : true,
+            imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL : CONTEXT_PATH + "/discuss/uploadMdPic",// 后端上传图片的服务地址
+            onload : function() {
+
+            },
+            toolbarIcons : function() {
+                return [
+                    "bold","del","italic","quote","|",
+                    "link","image","watch","|",
+                    "h1","h2","h3","h4","h5","h6"
+                    ]
+            }
+        });
+    });
+</script>
+<!--发帖-->
+<script type="text/javascript" th:inline="javascript">
+    $(function (){
+        $("#publishBtn").click(publish);
+    });
+    function publish(){
+        //当点击提交按钮时，将sessionStorage中的信息移除
+        sessionStorage.removeItem('title');
+        sessionStorage.removeItem('content');
+
+        var tag = $("#tag").find("option:selected").val();
+        var title = $("#title").val();
+        if(title==null || title==""){
+            alert("标题不能为空");
+            return;
+        }
+        var content = $("#content").val();
+        var voteId = sessionStorage.getItem("voteId");
+        var diceId = sessionStorage.getItem("diceId");
+
+        sessionStorage.removeItem("voteId");
+        sessionStorage.removeItem("diceId");
+        $.post(
+            CONTEXT_PATH+"/discuss/add",
+            {"title":title,"content":content,"tag":tag,"voteId":voteId,"diceId":diceId},
+            function (data){
+                data = $.parseJSON(data);
+                $("#hintBody").text(data.msg);
+                $("#hintModal").modal("show");
+                setTimeout(function () {
+                    $("hintModal").modal("hide");
+                    if (data.code == 0) {
+                        location.href = CONTEXT_PATH + "/index";
+                    }
+                    if (data.code == 403) {
+                        location.href = CONTEXT_PATH + "/index";
+                    }
+                },1000);
+            }
+        )
+    }
+</script>
+<!--投票和骰子-->
+<script type="text/javascript">
+    function save1(){
+        if(sessionStorage.getItem("voteId")!=null){
+            alert("每次只能有一个投票");
+            return false;
+        }
+        //标题正文放进sessionstorage中缓存
+        var val1=$('#title').val();
+        var val2=$("#content").val();
+        sessionStorage.setItem('title',val1);
+        sessionStorage.setItem('content',val2);
+    }
+    function save2(){
+        if(sessionStorage.getItem("diceId")!=null){
+            alert("每次只能扔一次骰子");
+            return false;
+        }
+        var val1=$('#title').val();
+        var val2=$("#content").val();
+        sessionStorage.setItem('title',val1);
+        sessionStorage.setItem('content',val2);
+    }
+    function delvote(){
+        var voteId = sessionStorage.getItem("voteId");
+        $.post(
+            CONTEXT_PATH+"/discuss/delvote/"+voteId,
+            {"voteId":voteId},
+            function (data){
+                $("#voteId").html(data);
+                sessionStorage.removeItem("voteId");
+            }
+        )
+    }
+    function deldice(){
+        var diceId = sessionStorage.getItem("diceId");
+        $.post(
+            CONTEXT_PATH+"/discuss/deldice/"+diceId,
+            {"diceId":diceId},
+            function (data){
+                $("#diceId").html(data);
+                sessionStorage.removeItem("diceId");
+            }
+        )
+    }
+    //当网页加载时，将sessionStorage中的内容加载到对应的输入框中
+    $(document).ready(function(){
+        var val1=sessionStorage.getItem('title');
+        var val2=sessionStorage.getItem('content');
+        var val3=sessionStorage.getItem("voteId");
+        var val4=sessionStorage.getItem("diceId");
+        $("#title").val(val1);
+        $("#content").val(val2);
+        $("#voteId").val(val3);
+        $("#diceId").val(val4);
+    });
+</script>
+</body>
+</html>
