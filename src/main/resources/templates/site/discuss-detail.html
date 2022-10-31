@@ -289,19 +289,24 @@
         }
     }
     function over(){ // 标为完结
-        var postId = [[${post.id}]];
-        $.post(
-            CONTEXT_PATH+"/discuss/over",
-            {"postId":postId},
-            function (data){
-                data = $.parseJSON(data);
-                $("#hintBody").text(data.msg);
-                $("#hintModal").modal("show");
-                setTimeout(function () {
-                    $("hintModal").modal("hide");
-                },1000);
-            }
-        )
+        if(window.confirm('确定标为完结？此操作不可逆')){
+            var postId = [[${post.id}]];
+            $.post(
+                CONTEXT_PATH+"/discuss/over",
+                {"postId":postId},
+                function (data){
+                    data = $.parseJSON(data);
+                    $("#hintBody").text(data.msg);
+                    $("#hintModal").modal("show");
+                    setTimeout(function () {
+                        $("hintModal").modal("hide");
+                    },1000);
+                }
+            )
+            return true;
+        }
+        else
+            return false;
     }
     function savepos(){
         sessionStorage.setItem("pos",document.documentElement.scrollTop);
