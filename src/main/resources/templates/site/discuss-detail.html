@@ -53,7 +53,7 @@
             <span th:text="${#dates.format(post.createTime,'MM-dd HH:mm:ss')}"></span>
 <!--            标为完结状态-->
             <a th:if="${loginUser!=null && user.id==loginUser.id}" onclick="over()"><i class="layui-icon layui-icon-ok" style="font-size: 15px; color: #1E9FFF;"></i></a>
-            <a th:if="${loginUser!=null && user.id==loginUser.id}"><i class="layui-icon layui-icon-export" style="font-size: 15px; color: #1E9FFF;"></i></a>
+            <a th:if="${loginUser!=null && user.id==loginUser.id}" onclick="exp()"><i class="layui-icon layui-icon-export" style="font-size: 15px; color: #1E9FFF;"></i></a>
         </div>
 <!--        主楼-->
         <br>
@@ -325,6 +325,9 @@
                 },1000);
             }
         )
+    }
+    function exp(){
+        alert("导出功能，还没写呢");
     }
 </script>
 </body>
