@@ -2,9 +2,7 @@ package com.wh.wenniao.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.sun.istack.internal.NotNull;
 import lombok.Data;
-import net.sf.jsqlparser.expression.DateTimeLiteralExpression;
 
 import java.io.Serializable;
 import java.util.Date;

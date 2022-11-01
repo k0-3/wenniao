@@ -51,7 +51,7 @@ public class EventConsumer implements CommunityConstant {
     private String contextPath;
 
     //域名
-    @Value("http://localhost:8081")
+    @Value("${domain}")
     private String domain;
 
     @Resource

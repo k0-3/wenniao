@@ -1,4 +1,4 @@
-var CONTEXT_PATH="http://192.168.3.17:8081"
+var CONTEXT_PATH=""
 
 //返回上一级
 function ret(){

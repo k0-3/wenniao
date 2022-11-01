@@ -47,7 +47,7 @@ public class DiscussPostController implements CommunityConstant {
     private DiceMapper diceMapper;
 
     // 网站域名
-    @Value("http://192.168.3.17:8081")
+    @Value("${domain}")
     private String domain;
 
     // 项目名(访问路径)
